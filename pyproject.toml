@@ -1,0 +1,12 @@
+[project]
+name = "rt-video-d"
+version = "0.1.0"
+description = "RT Video Decomposition"
+requires-python = ">=3.10"
+
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "PyYAML",
+    "matplotlib",
+]
