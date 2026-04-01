@@ -2,6 +2,7 @@ import numpy as np
 
 class Vector:
     def __init__(self, *args):
+        self.size=len(args)
         self.data = np.array(args, dtype=float)
 
     def __add__(self, other):
