@@ -9,7 +9,12 @@ def get_sigma(A:matu.Matrix):
     # todo
     eigenval=eig.get_eigenvalues(updA)
     eigenval = np.sqrt(eigenval)
-    return eigenval[::-1] 
+    eigenval = eigenval[::-1] 
+    
+    res =matu.Matrix.identity(updA.shape[0])
+    for i in range(eigenval.length):
+        res[i,i]=eigenval[i]
+    return res
 def get_V(A:matu.Matrix):
     return
 def svd_decomposition(A:matu.Matrix):
