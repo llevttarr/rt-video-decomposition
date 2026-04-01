@@ -1,5 +1,6 @@
 import tens.mat as matu
 import tens.vec as vecu
+import qr
 
 def get_eig(A:matu.Matrix):
     pass
