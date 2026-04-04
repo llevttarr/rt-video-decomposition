@@ -10,3 +10,5 @@ class FrameBuffer:
         pass
     def is_full(self):
         return len(self.frames)>=self.n
+    def to_mat(self)->Matrix:
+        pass
