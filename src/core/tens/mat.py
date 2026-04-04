@@ -37,6 +37,9 @@ class Matrix:
         return f"{self.__class__.__name__}(\n{self.data}\n)"
     def transpose(self):
         return self.__class__(self.data.T)
+    @property
+    def T(self):
+        return self.transpose()
     def inverse(self):
         return self.__class__(np.linalg.inv(self.data))
 
@@ -86,3 +89,7 @@ class Matrix:
                 if np.abs(self[i][j])>eps:
                     return False
         return True
+    def get_col(self, j):
+        return v.Vector(*self.data[:,j])
+    def get_row(self, i):
+        return v.Vector(*self.data[i,:])

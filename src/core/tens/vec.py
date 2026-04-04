@@ -31,6 +31,8 @@ class Vector:
     @property
     def length(self):
         return np.linalg.norm(self.data)
+    def __truediv__(self,c):
+        return Vector(*(self.data/c))
 
     def normalize(self):
         norm = self.length
