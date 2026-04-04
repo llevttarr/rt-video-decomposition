@@ -10,8 +10,8 @@ from pipeline.background_model import BackgroundModel
 import numpy as np
 import cv2
 
-WIDTH_RESIZE=150
-HEIGHT_RESIZE=150
+WIDTH_RESIZE=90
+HEIGHT_RESIZE=90
 RANK=2
 THRESHOLD=10.0
 
