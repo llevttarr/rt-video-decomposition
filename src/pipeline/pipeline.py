@@ -6,10 +6,22 @@ from ..debug.debug import dbg
 from frame_buffer import FrameBuffer
 from results import PipelineResult
 from background_model import BackgroundModel
+
+import numpy as np
+import cv2
+
+WIDTH_RESIZE=150
+HEIGHT_RESIZE=150
+RANK=2
+THRESHOLD=10.0
+
 class VideoPipeline:
-    def __init__(self,n:int):
+    def __init__(self,n:int,w:int,h:int):
         dbg("pipeline init")
         self.buffer=FrameBuffer(n)
+        self.model=BackgroundModel(rank=RANK,threshold=THRESHOLD)
+        self.w=w
+        self.h=h
 
     def process(self,frame):
         # STAGES
@@ -26,19 +38,25 @@ class VideoPipeline:
         # 4. push into buffer
         # 5. output result
         # - - -
-        v=self.preprocess(frame)
+        v,vshape=self.preprocess(frame)
 
-        res= PipelineResult(v)
+        res= PipelineResult(frame,v,vshape)
 
         buffer=self.buffer
         if (buffer.is_full()):
-            model=BackgroundModel(rank=0,threshold=0.0)
             x:Matrix=buffer.to_mat()
-            model.process(x,v)
+            self.model.process(x,v)
 
-            res.background=model.bg
-            res.foreground_mask=model.fg
+            res.background=self.model.bg
+            res.foreground_mask=self.model.fg
         buffer.push(v)
-        res.output()
-    def preprocess(self,frame)->Vector:
-        pass
+        return res.output(self.w,self.h)
+    def preprocess(self,frame)->tuple[Vector,tuple[int,int]]:
+        gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+        target_width=WIDTH_RESIZE
+        target_height=HEIGHT_RESIZE
+        gray = cv2.resize(gray,(target_width, target_height), interpolation=cv2.INTER_AREA)
+        gray = gray.astype(np.float64)
+        flat = gray.flatten()
+        vec = Vector(flat.tolist())
+        return vec, gray.shape

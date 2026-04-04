@@ -6,22 +6,25 @@ from io.output import VideoOutput
 from debug.debug import dbg
 
 def app_run():
+    print("{Real-Time VD}: Starting the application...")
     dbg("app_run()")
     n=30
     w=500
     h=500
     fps=30
 
-    input=CameraInput(0,n,w,h,fps)
+    cinput=CameraInput(0,n,w,h,fps)
     output=VideoOutput(w,h,fps)
     pipeline=VideoPipeline(n)
-    input.capture()
+    cinput.capture()
+    dbg("capture() happened, starting main loop")
     try:
         while True:
-            frame = input.get_frame()
+            frame = cinput.get_frame()
             if frame is None:
                 break
-            pipeline.process(frame)
+            res= pipeline.process(frame)
+            output.show(res)
     finally:
         dbg("break while cycle")
         input.release()
