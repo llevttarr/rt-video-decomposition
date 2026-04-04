@@ -1,6 +1,6 @@
-import tens.mat as matu
-import tens.vec as vecu
-import qr
+import core.tens.mat as matu
+import core.tens.vec as vecu
+import core.qr
 
 def get_eig(A: matu.Matrix, max_iter=1000, eps=1e-10):
     if not A.is_sq():

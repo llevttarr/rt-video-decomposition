@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from ..core.tens.vec import Vector
-from ..core.tens.mat import Matrix
+from core.tens.vec import Vector
+from core.tens.mat import Matrix
 
 import numpy as np
 import cv2

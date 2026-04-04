@@ -1,10 +1,10 @@
-from ..core.tens.vec import Vector
-from ..core.tens.mat import Matrix
+from core.tens.vec import Vector
+from core.tens.mat import Matrix
 
 import cv2
 import numpy as np
 
-from ..debug.debug import dbg
+from debug.debug import dbg
 
 class CameraInput:
     def __init__(self,index,w,h,fps):

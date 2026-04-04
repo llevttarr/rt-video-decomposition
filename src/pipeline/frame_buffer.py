@@ -1,5 +1,5 @@
-from ..core.tens.vec import Vector
-from ..core.tens.mat import Matrix
+from core.tens.vec import Vector
+from core.tens.mat import Matrix
 
 class FrameBuffer:
     def __init__(self,n:int):

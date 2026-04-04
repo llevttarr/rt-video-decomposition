@@ -1,5 +1,5 @@
 import numpy as np
-import vec as v
+import core.tens.vec as v
 
 class Matrix:
     def __init__(self, *args,shape=None):

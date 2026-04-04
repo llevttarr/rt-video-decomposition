@@ -1,6 +1,6 @@
 import numpy as np
-import tens.mat as matu
-import tens.vec as vecu
+import core.tens.mat as matu
+import core.tens.vec as vecu
 
 def qr_decomposition(A:matu.Matrix):
     n,m= A.shape

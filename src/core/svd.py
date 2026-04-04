@@ -1,6 +1,7 @@
-import tens.mat as matu
-import tens.vec as vecu
-import eigen as eig
+import core.tens.mat as matu
+import core.tens.vec as vecu
+import core.eigen as eig
+
 import numpy as np
 def get_U(A:matu.Matrix,eigval,eigvec):
     m,n = A.shape

@@ -1,11 +1,11 @@
-from ..core.tens.vec import Vector
-from ..core.tens.mat import Matrix
+from core.tens.vec import Vector
+from core.tens.mat import Matrix
 
-from ..debug.debug import dbg
+from debug.debug import dbg
 
-from frame_buffer import FrameBuffer
-from results import PipelineResult
-from background_model import BackgroundModel
+from pipeline.frame_buffer import FrameBuffer
+from pipeline.results import PipelineResult
+from pipeline.background_model import BackgroundModel
 
 import numpy as np
 import cv2
@@ -40,7 +40,7 @@ class VideoPipeline:
         # - - -
         v,vshape=self.preprocess(frame)
 
-        res= PipelineResult(frame,v,vshape)
+        res= PipelineResult(frame,v,vshape,None,None)
 
         buffer=self.buffer
         if (buffer.is_full()):

@@ -1,7 +1,7 @@
 from pipeline.pipeline import VideoPipeline
 
-from io.input import CameraInput
-from io.output import VideoOutput
+from inpoutp.input import CameraInput
+from inpoutp.output import VideoOutput
 
 from debug.debug import dbg
 
@@ -13,9 +13,9 @@ def app_run():
     h=500
     fps=30
 
-    cinput=CameraInput(0,n,w,h,fps)
+    cinput=CameraInput(0,w,h,fps)
     output=VideoOutput(w,h,fps)
-    pipeline=VideoPipeline(n)
+    pipeline=VideoPipeline(n,w,h)
     cinput.capture()
     dbg("capture() happened, starting main loop")
     try:
@@ -24,7 +24,10 @@ def app_run():
             if frame is None:
                 break
             res= pipeline.process(frame)
-            output.show(res)
+            stop=output.show(res)
+            if stop:
+                break
     finally:
         dbg("break while cycle")
-        input.release()
+        cinput.release()
+        output.release()
