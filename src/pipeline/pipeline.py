@@ -1,16 +1,17 @@
 from ..core.tens.vec import Vector
 from ..core.tens.mat import Matrix
 
-from ..io.input import get_frame
+from ..debug.debug import dbg
 
 from frame_buffer import FrameBuffer
 from results import PipelineResult
 from background_model import BackgroundModel
 class VideoPipeline:
     def __init__(self,n:int):
+        dbg("pipeline init")
         self.buffer=FrameBuffer(n)
 
-    def process(self):
+    def process(self,frame):
         # STAGES
         # - - -
         # 1. get raw frame
@@ -25,8 +26,7 @@ class VideoPipeline:
         # 4. push into buffer
         # 5. output result
         # - - -
-        v:Vector=get_frame()
-        self.preprocess(v)
+        v=self.preprocess(frame)
 
         res= PipelineResult(v)
 
@@ -40,5 +40,5 @@ class VideoPipeline:
             res.foreground_mask=model.fg
         buffer.push(v)
         res.output()
-    def preprocess(self,v:Vector):
+    def preprocess(self,frame)->Vector:
         pass
