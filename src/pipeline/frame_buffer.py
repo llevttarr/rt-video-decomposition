@@ -17,7 +17,7 @@ class FrameBuffer:
         self.frames[self.n-1]=frame
         return True
     def is_full(self):
-        return len(self.frames)>self.n
+        return len(self.frames)>=self.n
     def to_mat(self)->Matrix:
         fr = [v.data for v in self.frames]
-        return Matrix(np.vstack(fr))
+        return Matrix(np.column_stack(fr))
