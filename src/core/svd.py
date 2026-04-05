@@ -3,6 +3,9 @@ import core.tens.vec as vecu
 import core.eigen as eig
 
 import numpy as np
+
+from debug.debug import dbg
+
 def get_U(A:matu.Matrix,eigval,eigvec):
     m,n = A.shape
     U = matu.Matrix.zeros(m, m)
@@ -42,10 +45,15 @@ def sqrt_safe(x):
     return (max(x,0.0))**0.5
 def svd_decomposition(A:matu.Matrix):
     AtA = A.T @ A
-    eigval,eigvec= eig.get_eig(AtA)
+    dbg("bfore eig")
+    eigval,eigvec= eig.get_eig(AtA,100)
+    dbg("eig")
     eigval,eigvec=sort_eigval(eigval,eigvec)
-
+    dbg("sort eigval")
+    
     U=get_U(A,eigval,eigvec)
-    S=get_sigma(A,eigval)
-    V=get_V(A,eigvec)
+    # S=get_sigma(A,eigval)
+    # V=get_V(A,eigvec)
+    S=0.0
+    V=0.0
     return U,S,V

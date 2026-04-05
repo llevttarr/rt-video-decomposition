@@ -22,7 +22,7 @@ class BackgroundModel():
         self.mean=np.mean(x.data,axis=1)
         xmd=x.data-self.mean[:,None]
         xm=Matrix(xmd)
-        u,s,v=svd_decomposition(xm)
+        u,_,_=svd_decomposition(xm)
         self.initialized=True
 
         r=min(u.shape[1],self.rank)

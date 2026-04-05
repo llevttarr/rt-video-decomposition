@@ -93,3 +93,7 @@ class Matrix:
         return v.Vector(*self.data[:,j])
     def get_row(self, i):
         return v.Vector(*self.data[i,:])
+    def __sub__(self, other):
+        if isinstance(other, Matrix):
+            return self.__class__(self.data - other.data)
+        raise TypeError
