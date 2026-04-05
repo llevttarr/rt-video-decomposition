@@ -12,8 +12,8 @@ import cv2
 
 WIDTH_RESIZE=90
 HEIGHT_RESIZE=90
-RANK=2
-THRESHOLD=10.0
+RANK=1
+THRESHOLD=5.0
 
 class VideoPipeline:
     def __init__(self,n:int,w:int,h:int):
@@ -56,7 +56,7 @@ class VideoPipeline:
         target_width=WIDTH_RESIZE
         target_height=HEIGHT_RESIZE
         gray = cv2.resize(gray,(target_width, target_height), interpolation=cv2.INTER_AREA)
-        gray = gray.astype(np.float64)
+        gray = gray.astype(np.float32)
         flat = gray.flatten()
-        vec = Vector(flat.tolist())
+        vec = Vector(*flat.tolist())
         return vec, gray.shape

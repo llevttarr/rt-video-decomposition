@@ -2,6 +2,7 @@ from core.tens.vec import Vector
 from core.tens.mat import Matrix
 
 from core.svd import svd_decomposition
+from core.qr import qr_decomposition
 
 from debug.debug import dbg
 
@@ -16,14 +17,14 @@ class BackgroundModel():
     def process(self,x:Matrix,v:Vector):
         self.bg=self.estimate_background(x,v)
         self.fg=self.get_foreground(v)
-    def estimate_background(self,x,v):
+    def estimate_background(self,x,framev):
         u,s,v=svd_decomposition(x)
         r=min(self.rank,u.shape[1])
         if r<=0:
             dbg("rank <= 0")
             raise ValueError()
         ur= Matrix(u.data[:, :r])
-        coeff=ur.T @ v
+        coeff=ur.T @ framev
         bg=ur@coeff
         return bg
     def get_foreground(self,v:Vector):
