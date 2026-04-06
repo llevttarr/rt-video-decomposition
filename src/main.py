@@ -8,9 +8,9 @@ from debug.debug import dbg
 def app_run():
     print("{Real-Time VD}: Starting the application...")
     dbg("app_run()")
-    n=60
-    w=900
-    h=900
+    n=100
+    w=1000
+    h=1000
     fps=60
 
     cinput=CameraInput(0,w,h,fps)
