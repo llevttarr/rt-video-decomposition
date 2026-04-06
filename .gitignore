@@ -29,3 +29,5 @@ lib/
 opencv-python/
 opencv/
 opencv_contrib/
+myenv/
+myenv310/

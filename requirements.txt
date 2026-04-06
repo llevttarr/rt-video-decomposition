@@ -1,0 +1,5 @@
+numpy==1.22.0
+cupy-cuda12x
+setuptools
+wheel
+opencv-python

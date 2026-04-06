@@ -10,10 +10,10 @@ from pipeline.background_model import BackgroundModel
 import numpy as np
 import cv2
 
-WIDTH_RESIZE=90
-HEIGHT_RESIZE=90
-RANK=1
-THRESHOLD=5.0
+WIDTH_RESIZE=320
+HEIGHT_RESIZE=240
+RANK=3
+THRESHOLD=25.0
 
 class VideoPipeline:
     def __init__(self,n:int,w:int,h:int):
@@ -40,7 +40,8 @@ class VideoPipeline:
 
         self.model.process(v)
         res.background=self.model.bg
-        res.foreground_mask=self.model.fg
+        # res.foreground_mask=self.model.fg
+        res.foreground_mask = self.postprocess_mask(self.model.fg, vshape)
         return res.output(self.w,self.h)
     def preprocess(self,frame)->tuple[Vector,tuple[int,int]]:
         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
@@ -51,3 +52,12 @@ class VideoPipeline:
         flat = gray.flatten()
         vec = Vector(*flat.tolist())
         return vec, gray.shape
+    def postprocess_mask(self, fg: Vector, shape) -> Vector:
+        mask = fg.data.reshape(shape).astype(np.uint8)
+        kernel_open = np.ones((3,3), np.uint8)
+        kernel_close = np.ones((5,5), np.uint8)
+        mask= cv2.morphologyEx(mask,cv2.MORPH_OPEN, kernel_open)
+        mask= cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_close)
+        mask=cv2.dilate(mask,kernel_open,iterations=1)
+
+        return Vector(*mask.flatten().tolist())
