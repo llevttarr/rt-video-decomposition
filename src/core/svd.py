@@ -8,8 +8,9 @@ from debug.debug import dbg
 
 def get_U(A:matu.Matrix,eigval,eigvec):
     m,n = A.shape
-    U = matu.Matrix.zeros(m, m)
-    for i in range(min(m, n)):
+    k = min(m, n)
+    U = matu.Matrix.zeros(m, k)
+    for i in range(k):
         sigma_i = sqrt_safe(eigval[i])
         if sigma_i>1e-10:
             vi = eigvec[i].normalize()

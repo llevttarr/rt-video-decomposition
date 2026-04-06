@@ -4,11 +4,24 @@
 # Important
 For the cuda-accelerated version, python 3.10 must be used.
 
-It is advised to use a venv. Install requirements from requirements.txt:
+Use a virtual environment (recommended on Debian/Ubuntu due PEP 668):
+```
+python3.10 -m venv .venv
+source .venv/bin/activate
+```
+If `python3.10` is not available in your apt repositories (for example Ubuntu 24.04), install Python 3.10 locally via `uv`:
+```
+curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL="$HOME/.local/uv" UV_NO_MODIFY_PATH=1 sh
+$HOME/.local/uv/uv python install 3.10
+$HOME/.local/uv/uv venv --python 3.10 .venv
+source .venv/bin/activate
+```
+
+Install requirements from requirements.txt:
 ```
 pip install -r requirements.txt
 ```
 Then launch the file:
 ```
-python3.10 src/__main__.py
+python src/__main__.py
 ```

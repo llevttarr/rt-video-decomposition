@@ -19,31 +19,47 @@ class BackgroundModel():
         self.u=None
         self.rate=rate
         self.initialized=False
-        
+
+        self._qr_fn = None
+        self._svd_fn = None
         if use_cuda:
-            from gpu.cuda_alg import qr_gpu
-            from gpu.cuda_alg import svd_gpu
+            try:
+                from gpu.cuda_alg import qr_gpu
+                from gpu.cuda_alg import svd_gpu
+            except ImportError as exc:
+                dbg(f"CUDA modules unavailable, fallback to CPU: {exc}")
+                use_cuda = False
+            else:
+                self._qr_fn = qr_gpu
+                self._svd_fn = svd_gpu
         self.use_cuda=use_cuda
+
     def init_model(self,x:Matrix):
-        self.mean=np.mean(x.data,axis=1)
-        xmd=x.data-self.mean[:,None]
-        xm=Matrix(xmd)
+        x_data = x.data if isinstance(x, Matrix) else np.asarray(x, dtype=float)
+        self.mean=np.mean(x_data,axis=1)
+        xmd=x_data-self.mean[:,None]
         if self.use_cuda:
-            u,_,_=svd_gpu(xmd)
+            try:
+                u,_,_=self._svd_fn(xmd)
+            except Exception as exc:
+                dbg(f"CUDA SVD unavailable, fallback to CPU: {exc}")
+                self.use_cuda = False
+                u,_,_=svd_decomposition(Matrix(xmd))
         else:
-            u,_,_=svd_decomposition(xm)
+            u,_,_=svd_decomposition(Matrix(xmd))
+        u_data = u.data if isinstance(u, Matrix) else np.asarray(u, dtype=float)
         self.initialized=True
 
-        r=min(u.shape[1],self.rank)
-        self.u=u[:,:r]
+        r=min(u_data.shape[1],self.rank)
+        self.u=u_data[:,:r]
         dbg("model init")
         
     def process(self,v:Vector):
         x=v.data
         z=x-self.mean
-        
-        coeff=self.u.T.data@z
-        z_bg=self.u.data@coeff
+
+        coeff=self.u.T @ z
+        z_bg=self.u @ coeff
         bg=self.mean+z_bg
         self.bg=Vector(*bg)
         self.fg=self.get_foreground(v)
@@ -55,19 +71,25 @@ class BackgroundModel():
     def upd_model(self,x,z,eps=1e-6):
         rate=self.rate
         self.mean=self.mean*(1.0-rate)+rate*x
-        coeff=self.u.T.data@z
-        z_proj=self.u.data@coeff
+        coeff=self.u.T @ z
+        z_proj=self.u @ coeff
         residual=z-z_proj
         norm=np.linalg.norm(residual)
         if norm >eps:
             new_d=residual/norm
-            u_updat=np.column_stack([self.u.data,new_d])
+            u_updat=np.column_stack([self.u,new_d])
             u_upd=Matrix(u_updat)
             if self.use_cuda:
-                q,_=qr_gpu(u_updat)
+                try:
+                    q,_=self._qr_fn(u_updat)
+                except Exception as exc:
+                    dbg(f"CUDA QR unavailable, fallback to CPU: {exc}")
+                    self.use_cuda = False
+                    q,_=qr_decomposition(u_upd)
             else:
                 q,_=qr_decomposition(u_upd)
-            self.u=q[:,:self.rank]
+            q_data = q.data if isinstance(q, Matrix) else np.asarray(q, dtype=float)
+            self.u=q_data[:,:self.rank]
     def upd_model_masked(self,x,eps=1e-6):
         rate = self.rate
         fg_mask = self.fg.data > 0
@@ -76,17 +98,23 @@ class BackgroundModel():
             return
         self.mean[bg_mask] = self.mean[bg_mask]*(1.0-rate)+rate*x[bg_mask]
         z = x-self.mean
-        coeff = self.u.T.data @ z
-        z_proj = self.u.data @ coeff
+        coeff = self.u.T @ z
+        z_proj = self.u @ coeff
         residual = z-z_proj
         residual[fg_mask] = 0.0
         norm = np.linalg.norm(residual)
         if norm > eps:
             new_d = residual / norm
-            u_updat = np.column_stack([self.u.data, new_d])
+            u_updat = np.column_stack([self.u, new_d])
             u_upd=Matrix(u_updat)
             if self.use_cuda:
-                q,_=qr_gpu(u_updat)
+                try:
+                    q,_=self._qr_fn(u_updat)
+                except Exception as exc:
+                    dbg(f"CUDA QR unavailable, fallback to CPU: {exc}")
+                    self.use_cuda = False
+                    q,_=qr_decomposition(u_upd)
             else:
                 q,_=qr_decomposition(u_upd)
-            self.u = q[:, :self.rank]
+            q_data = q.data if isinstance(q, Matrix) else np.asarray(q, dtype=float)
+            self.u = q_data[:, :self.rank]

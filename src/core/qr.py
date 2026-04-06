@@ -3,8 +3,10 @@ import core.tens.mat as matu
 
 def qr_decomposition(A:matu.Matrix):
     n,m= A.shape
-    Q_data=np.eye(n)
+    k = min(n, m)
+    Q_data=np.eye(n, k)
     R_data=A.data.copy()
+    reflectors: list[tuple[int, np.ndarray]] = []
     
     for i in range(min(n - 1, m)):
         x = R_data[i:, i]
@@ -26,6 +28,10 @@ def qr_decomposition(A:matu.Matrix):
         u_col = u.reshape(-1, 1)
         R_sub = R_data[i:, i:]
         R_data[i:, i:] = R_sub - 2.0 * u_col @ (u_col.T @ R_sub)
-        Q_sub = Q_data[:, i:]
-        Q_data[:, i:] = Q_sub - 2.0 * (Q_sub @ u_col) @ u_col.T
-    return matu.Matrix(Q_data), matu.Matrix(R_data)
+        reflectors.append((i, u_col))
+
+    for i, u_col in reversed(reflectors):
+        Q_sub = Q_data[i:, :]
+        Q_data[i:, :] = Q_sub - 2.0 * u_col @ (u_col.T @ Q_sub)
+
+    return matu.Matrix(Q_data), matu.Matrix(R_data[:k, :])
