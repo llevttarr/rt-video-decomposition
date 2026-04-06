@@ -4,15 +4,13 @@ from core.tens.mat import Matrix
 from core.svd import svd_decomposition
 from core.qr import qr_decomposition
 
-from gpu.cuda_alg import qr_gpu
-from gpu.cuda_alg import svd_gpu
 
 from debug.debug import dbg
 
 import numpy as np
 
 class BackgroundModel():
-    def __init__(self,rank:int,threshold:float,rate=0.001):
+    def __init__(self,rank:int,threshold:float,rate=0.001,use_cuda=False):
         self.rank=rank
         self.threshold=threshold
         self.bg=None
@@ -21,11 +19,19 @@ class BackgroundModel():
         self.u=None
         self.rate=rate
         self.initialized=False
+        
+        if use_cuda:
+            from gpu.cuda_alg import qr_gpu
+            from gpu.cuda_alg import svd_gpu
+        self.use_cuda=use_cuda
     def init_model(self,x:Matrix):
         self.mean=np.mean(x.data,axis=1)
         xmd=x.data-self.mean[:,None]
-        # xm=Matrix(xmd)
-        u,_,_=svd_gpu(xmd)
+        xm=Matrix(xmd)
+        if self.use_cuda:
+            u,_,_=svd_gpu(xmd)
+        else:
+            u,_,_=svd_decomposition(xm)
         self.initialized=True
 
         r=min(u.shape[1],self.rank)
@@ -56,8 +62,11 @@ class BackgroundModel():
         if norm >eps:
             new_d=residual/norm
             u_updat=np.column_stack([self.u.data,new_d])
-            # u_upd=Matrix(u_updat)
-            q,_=qr_gpu(u_updat)
+            u_upd=Matrix(u_updat)
+            if self.use_cuda:
+                q,_=qr_gpu(u_updat)
+            else:
+                q,_=qr_decomposition(u_upd)
             self.u=q[:,:self.rank]
     def upd_model_masked(self,x,eps=1e-6):
         rate = self.rate
@@ -75,5 +84,9 @@ class BackgroundModel():
         if norm > eps:
             new_d = residual / norm
             u_updat = np.column_stack([self.u.data, new_d])
-            q, _ = qr_gpu(u_updat)
+            u_upd=Matrix(u_updat)
+            if self.use_cuda:
+                q,_=qr_gpu(u_updat)
+            else:
+                q,_=qr_decomposition(u_upd)
             self.u = q[:, :self.rank]

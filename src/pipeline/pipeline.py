@@ -16,10 +16,10 @@ RANK=3
 THRESHOLD=25.0
 
 class VideoPipeline:
-    def __init__(self,n:int,w:int,h:int):
+    def __init__(self,n:int,w:int,h:int,use_cuda):
         dbg("pipeline init")
         self.buffer=FrameBuffer(n)
-        self.model=BackgroundModel(rank=RANK,threshold=THRESHOLD)
+        self.model=BackgroundModel(rank=RANK,threshold=THRESHOLD,use_cuda=use_cuda)
         self.w=w
         self.h=h
 

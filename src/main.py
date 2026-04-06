@@ -12,10 +12,11 @@ def app_run():
     w=1000
     h=1000
     fps=60
+    use_cuda=True
 
     cinput=CameraInput(0,w,h,fps)
     output=VideoOutput(w,h,fps)
-    pipeline=VideoPipeline(n,w,h)
+    pipeline=VideoPipeline(n,w,h,use_cuda)
     cinput.capture()
     dbg("capture() happened, starting main loop")
     try:
