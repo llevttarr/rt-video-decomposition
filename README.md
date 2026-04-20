@@ -2,7 +2,8 @@
 > Oleh Hutsuliak, Oleksandr Stadnik, Taras Levytskyi
 
 # Videos
-[Taras Levytskyi](https://youtu.be/byIitgK1kJM)
+[Taras Levytskyi](https://youtu.be/byIitgK1kJM)  
+[Oleh Hutsuliak](https://www.youtube.com/watch?v=Fg1-TmvAm0U)  
 
 # Important
 For the cuda-accelerated version, python 3.10 must be used.
