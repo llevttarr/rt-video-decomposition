@@ -10,23 +10,25 @@ from pipeline.background_model import BackgroundModel
 import numpy as np
 import cv2
 
-WIDTH_RESIZE=320
-HEIGHT_RESIZE=240
-RANK=3
-THRESHOLD=25.0
+# optimised for CUDA, reduce if bad performance
+WIDTH_RESIZE=480
+HEIGHT_RESIZE=270
+RANK=4
+THRESHOLD=30.0
 
 class VideoPipeline:
     def __init__(self,n:int,w:int,h:int,use_cuda):
         dbg("pipeline init")
         self.buffer=FrameBuffer(n)
         self.model=BackgroundModel(rank=RANK,threshold=THRESHOLD,use_cuda=use_cuda)
+        self.color_mode=self.model.use_cuda
         self.w=w
         self.h=h
 
     def process(self,frame):
         # - - -
         # - - -
-        v,vshape=self.preprocess(frame)
+        v,vshape,channels=self.preprocess(frame)
 
         res= PipelineResult(frame,v,vshape,None,None)
 
@@ -35,7 +37,7 @@ class VideoPipeline:
             self.buffer.push(v)
             if self.buffer.is_full():
                 x=self.buffer.to_mat().data
-                self.model.init_model(x)
+                self.model.init_model(x,spatial_shape=vshape,channels=channels)
             return res.output(self.w, self.h)
 
         self.model.process(v)
@@ -43,15 +45,20 @@ class VideoPipeline:
         # res.foreground_mask=self.model.fg
         res.foreground_mask = self.postprocess_mask(self.model.fg, vshape)
         return res.output(self.w,self.h)
-    def preprocess(self,frame)->tuple[Vector,tuple[int,int]]:
-        gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    def preprocess(self,frame)->tuple[Vector,tuple[int,int],int]:
         target_width=WIDTH_RESIZE
         target_height=HEIGHT_RESIZE
-        gray = cv2.resize(gray,(target_width, target_height), interpolation=cv2.INTER_AREA)
-        gray = gray.astype(np.float32)
-        flat = gray.flatten()
-        vec = Vector(*flat.tolist())
-        return vec, gray.shape
+        frame_small = cv2.resize(frame,(target_width, target_height), interpolation=cv2.INTER_AREA)
+
+        if self.color_mode:
+            color = frame_small.astype(np.float32, copy=False)
+            vec = Vector.from_array(color.reshape(-1))
+            return vec, (target_height, target_width), 3
+
+        gray = cv2.cvtColor(frame_small,cv2.COLOR_BGR2GRAY)
+        gray = gray.astype(np.float32, copy=False)
+        vec = Vector.from_array(gray.reshape(-1))
+        return vec, gray.shape, 1
     def postprocess_mask(self, fg: Vector, shape) -> Vector:
         mask = fg.data.reshape(shape).astype(np.uint8)
         kernel_open = np.ones((3,3), np.uint8)
@@ -60,4 +67,4 @@ class VideoPipeline:
         mask= cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_close)
         mask=cv2.dilate(mask,kernel_open,iterations=1)
 
-        return Vector(*mask.flatten().tolist())
+        return Vector.from_array(mask.reshape(-1))

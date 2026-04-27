@@ -5,6 +5,14 @@ class Vector:
         self.size=len(args)
         self.data = np.array(args, dtype=float)
 
+    @classmethod
+    def from_array(cls, arr):
+        obj = cls.__new__(cls)
+        data = np.asarray(arr, dtype=float).reshape(-1)
+        obj.size = data.size
+        obj.data = data
+        return obj
+
     def __add__(self, other):
         return Vector(*(self.data + other.data))
 

@@ -19,6 +19,11 @@ class BackgroundModel():
         self.u=None
         self.rate=rate
         self.initialized=False
+        self.spatial_shape=None
+        self.channels=1
+        self.pixel_count=0
+        self.frame_idx=0
+        self.basis_update_interval=1
 
         self._qr_fn = None
         self._svd_fn = None
@@ -34,8 +39,12 @@ class BackgroundModel():
                 self._svd_fn = svd_gpu
         self.use_cuda=use_cuda
 
-    def init_model(self,x:Matrix):
+    def init_model(self,x:Matrix,spatial_shape:tuple[int,int],channels:int=1):
         x_data = x.data if isinstance(x, Matrix) else np.asarray(x, dtype=float)
+        self.spatial_shape=spatial_shape
+        self.channels=channels
+        self.pixel_count=spatial_shape[0]*spatial_shape[1]
+        self.basis_update_interval=2 if channels==3 else 1
         self.mean=np.mean(x_data,axis=1)
         xmd=x_data-self.mean[:,None]
         if self.use_cuda:
@@ -55,19 +64,27 @@ class BackgroundModel():
         dbg("model init")
         
     def process(self,v:Vector):
+        self.frame_idx+=1
         x=v.data
         z=x-self.mean
 
         coeff=self.u.T @ z
         z_bg=self.u @ coeff
         bg=self.mean+z_bg
-        self.bg=Vector(*bg)
+        self.bg=Vector.from_array(bg)
         self.fg=self.get_foreground(v)
         self.upd_model_masked(x)
     def get_foreground(self,v:Vector):
         residual = np.abs(v.data-self.bg.data)
-        mask = np.where(residual>self.threshold,255.0,0.0)
-        return Vector(*mask)
+        if self.channels==1:
+            mask=np.where(residual>self.threshold,255.0,0.0)
+            return Vector.from_array(mask)
+
+        residual_view = residual.reshape(self.pixel_count,self.channels)
+        dist2=np.sum(residual_view*residual_view,axis=1)
+        thr2=(self.threshold*self.threshold)*self.channels
+        mask=np.where(dist2>thr2,255.0,0.0)
+        return Vector.from_array(mask)
     def upd_model(self,x,z,eps=1e-6):
         rate=self.rate
         self.mean=self.mean*(1.0-rate)+rate*x
@@ -94,14 +111,32 @@ class BackgroundModel():
         rate = self.rate
         fg_mask = self.fg.data > 0
         bg_mask = ~fg_mask
-        if np.sum(bg_mask) == 0:
+        if not np.any(bg_mask):
             return
-        self.mean[bg_mask] = self.mean[bg_mask]*(1.0-rate)+rate*x[bg_mask]
+
+        if self.channels==1:
+            self.mean[bg_mask]=self.mean[bg_mask]*(1.0-rate)+rate*x[bg_mask]
+        else:
+            x_view=x.reshape(self.pixel_count,self.channels)
+            mean_view=self.mean.reshape(self.pixel_count,self.channels)
+            mean_view[bg_mask]=mean_view[bg_mask]*(1.0-rate)+rate*x_view[bg_mask]
+            self.mean=mean_view.reshape(-1)
+
         z = x-self.mean
         coeff = self.u.T @ z
         z_proj = self.u @ coeff
         residual = z-z_proj
-        residual[fg_mask] = 0.0
+
+        if self.channels==1:
+            residual[fg_mask]=0.0
+        else:
+            residual_view=residual.reshape(self.pixel_count,self.channels)
+            residual_view[fg_mask]=0.0
+            residual=residual_view.reshape(-1)
+
+        if self.basis_update_interval>1 and (self.frame_idx % self.basis_update_interval)!=0:
+            return
+
         norm = np.linalg.norm(residual)
         if norm > eps:
             new_d = residual / norm

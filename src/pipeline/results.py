@@ -15,8 +15,7 @@ class PipelineResult:
     background: Vector| None
     foreground_mask: Vector| None
     def vector_to_frame(self, v: Vector,w,h)-> np.ndarray:
-        arr = np.array(v.data, dtype=np.float64)
-        arr =arr.reshape((h,w))
+        arr = v.data.reshape((h,w))
         arr = np.clip(arr, 0, 255).astype(np.uint8)
         return arr
     def output(self,w,h):
